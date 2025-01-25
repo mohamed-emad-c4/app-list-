@@ -98,13 +98,19 @@ class _AppHomeScreenState extends State<AppHomeScreen> {
     }
   }
 
-  void shareApp(String appName, String packageName) async {
+void shareApp(String appName, String packageName) async {
     try {
-      await platform.invokeMethod('shareApp', {'appName': appName, 'packageName': packageName});
+      await platform.invokeMethod('shareApp', {
+        'appName': appName,
+        'packageName': packageName,
+      });
     } on PlatformException catch (e) {
       print("Failed to share app: ${e.message}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to share app: ${e.message}")),
+      );
     }
-  }
+}
 
   void copyAppInfo(String appName, String packageName) {
     Clipboard.setData(ClipboardData(text: "App: $appName\nPackage: $packageName"));
@@ -128,7 +134,31 @@ class _AppHomeScreenState extends State<AppHomeScreen> {
       isDarkMode = value;
     });
   }
-
+void _confirmUninstall(BuildContext context, String packageName) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Uninstall App'),
+      content: const Text('Are you sure you want to uninstall this app?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context); // Close the dialog
+            uninstallApp(packageName); // Call the uninstall method
+          },
+          child: const Text(
+            'Uninstall',
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      ],
+    ),
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -227,8 +257,7 @@ class _AppHomeScreenState extends State<AppHomeScreen> {
                                           leading: const Icon(Icons.delete),
                                           title: const Text("Uninstall App"),
                                           onTap: () {
-                                            Navigator.pop(context);
-                                            uninstallApp(app['packageName']);
+                                             _confirmUninstall(context, app['packageName']);
                                           },
                                         ),
                                       ],

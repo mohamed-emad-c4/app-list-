@@ -38,6 +38,16 @@ class MainActivity : FlutterActivity() {
                         result.error("ERROR", "Package name is null", null)
                     }
                 }
+                "shareApp" -> {
+                    val appName = call.argument<String>("appName")
+                    val packageName = call.argument<String>("packageName")
+                    if (appName != null && packageName != null) {
+                        shareApp(appName, packageName)
+                        result.success(null)
+                    } else {
+                        result.error("INVALID_ARGUMENTS", "App name or package name is null", null)
+                    }
+                }
                 "uninstallApp" -> {
                     val packageName = call.argument<String>("packageName")
                     if (packageName != null) {
@@ -102,9 +112,8 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun uninstallApp(packageName: String) {
-        val intent = Intent(Intent.ACTION_DELETE).apply {
-            data = Uri.parse("package:$packageName")
-        }
+        val intent = Intent(Intent.ACTION_DELETE)
+        intent.data = Uri.parse("package:$packageName")
         startActivity(intent)
     }
 
@@ -139,6 +148,13 @@ class MainActivity : FlutterActivity() {
         bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream)
         return stream.toByteArray()
     }
-
+    private fun shareApp(appName: String, packageName: String) {
+        val playStoreUrl = "https://play.google.com/store/apps/details?id=$packageName"
+        val shareText = "Check out this app: $appName\n$playStoreUrl"
     
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TEXT, shareText)
+        startActivity(Intent.createChooser(intent, "Share via"))
+    }
 }
